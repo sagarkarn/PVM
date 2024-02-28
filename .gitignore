@@ -1,0 +1,75 @@
+# .NET Core / .NET Standard
+*.dll
+*.exe
+*.pdb
+*.dll.config
+*.exe.config
+*.deps.json
+*.runtimeconfig.json
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio files
+.vs/
+*.vscode/
+*.sln
+*.suo
+*.csproj
+*.user
+*.userprefs
+*.log
+*.tlog
+*.jfm
+*.gpState
+
+# Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NuGet
+packages/
+*.nupkg
+*.paket.*
+*.paket.lock
+*.paket.references
+paket-files/
+
+# StyleCop
+StyleCopReport.xml
+
+# Resharper
+_ReSharper*/
+*.resharper
+*.DotSettings.user
+
+# Others
+[Tt]humbs.db
+*.bak
+*.cache
+*.bak.*
+*.swp
+*.tmp
+*.tmp.*
+*.~*
+*.dbmdl
+*.dbproj.schemaview
+*.pfx
+*.publishsettings
+node_modules/
+bower_components/
+
+
+pvm/bin
+pvm/php
+pvm/php7.4
+pvm/pvm.db
+pvm/properties
