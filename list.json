@@ -1,0 +1,50 @@
+[
+    {
+        "Version": "8.3.3",
+        "Url": "https://windows.php.net/downloads/releases/php-8.3.3-nts-Win32-vs16-x64.zip",
+        "Type": "nts",
+        "Architecture": "x64"
+    },
+    {
+        "Version": "8.3.3",
+        "Url": "https://windows.php.net/downloads/releases/php-8.3.3-Win32-vs16-x64.zip",
+        "Type": "ts",
+        "Architecture": "x64"
+    },
+    {
+        "Version": "8.3.3",
+        "Url": "https://windows.php.net/downloads/releases/php-8.3.3-nts-Win32-vs16-x86.zip",
+        "Type": "nts",
+        "Architecture": "x86"
+    },
+    {
+        "Version": "8.3.3",
+        "Url": "https://windows.php.net/downloads/releases/php-8.3.3-Win32-vs16-x86.zip",
+        "Type": "ts",
+        "Architecture": "x86"
+    },
+    {
+        "Version": "8.2.16",
+        "Url": "https://windows.php.net/downloads/releases/php-8.2.16-nts-Win32-vs16-x64.zip",
+        "Type": "nts",
+        "Architecture": "x64"
+    },
+    {
+        "Version": "8.2.16",
+        "Url": "https://windows.php.net/downloads/releases/php-8.2.16-Win32-vs16-x64.zip",
+        "Type": "ts",
+        "Architecture": "x64"
+    },
+    {
+        "Version": "8.2.16",
+        "Url": "https://windows.php.net/downloads/releases/php-8.2.16-nts-Win32-vs16-x86.zip",
+        "Type": "nts",
+        "Architecture": "x86"
+    },
+    {
+        "Version": "8.2.16",
+        "Url": "https://windows.php.net/downloads/releases/php-8.2.16-Win32-vs16-x86.zip",
+        "Type": "ts",
+        "Architecture": "x86"
+    }
+]
