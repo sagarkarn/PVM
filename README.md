@@ -1,4 +1,4 @@
-# PVM(Php Version Management Tool)
+# PVM(Php Version Management Tool) For windows only
 
 ## Description
 
