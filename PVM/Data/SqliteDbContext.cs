@@ -8,5 +8,6 @@ namespace PVM.Data
         {
         }
         public DbSet<PhpVersion> PhpVersions { get; set; }
+        public DbSet<InstallUrl> InstallUrls { get; set; }
     }
 }
