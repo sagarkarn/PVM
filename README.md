@@ -38,7 +38,7 @@ Below are some common commands you can use with PVM:
   pvm ext
   ```
 
-  - **Enable extension**: enable current activated php extension:
+- **Enable extension**: enable current activated php extension:
   ```
   pvm ext-enable curl
   ```
