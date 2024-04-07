@@ -38,6 +38,11 @@ Below are some common commands you can use with PVM:
   pvm ext
   ```
 
+  - **Enable extension**: enable current activated php extension:
+  ```
+  pvm ext-enable curl
+  ```
+
 - **Open INI File in Notepad**: Open the PHP configuration (INI) file in Notepad:
   ```
   pvm ini
