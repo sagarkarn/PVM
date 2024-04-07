@@ -39,8 +39,14 @@ namespace PVM.Commands
             var iniPath = System.IO.Path.Join(currentVersion.Path, "php.ini");
             if (!System.IO.File.Exists(iniPath))
             {
-                Console.WriteLine("php.ini not found");
-                return;
+                Console.WriteLine("php.ini not found copying php.ini-development file");
+                var iniDevelopmentPath = System.IO.Path.Join(currentVersion.Path, "php.ini-development");
+                if (!System.IO.File.Exists(iniDevelopmentPath))
+                {
+                    Console.WriteLine("php.ini-development not found");
+                    return;
+                }
+                File.Copy(iniDevelopmentPath, iniPath);
             }
 
             Process.Start("notepad.exe", iniPath);

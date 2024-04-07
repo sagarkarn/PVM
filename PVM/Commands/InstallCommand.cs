@@ -2,13 +2,9 @@
 using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
 using PVM.Data;
-using System;
-using System.Collections.Generic;
+using PVM.helpers;
 using System.ComponentModel;
 using System.IO.Compression;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PVM.Commands
 {
@@ -27,12 +23,13 @@ namespace PVM.Commands
             _dbContext.Database.Migrate();
         }
 
-        public void Install([Argument]string version, [Description("Only nts and ts value is allowed")]Type type = Type.Nts)
+        public async void Install([Argument] string version, [Description("Only nts and ts value is allowed")] Type type = Type.Nts)
         {
-            var phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.Version == version);
+            var phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.Version.StartsWith(version));
+
             if (phpVersion != null)
             {
-                Console.WriteLine($"Version {version} already exists");
+                Console.WriteLine($"Version {phpVersion.Version} already exists");
                 return;
             }
 
@@ -40,51 +37,97 @@ namespace PVM.Commands
 
             var arch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
 
-            var installUrl = _dbContext.InstallUrls.FirstOrDefault(u => u.Version == version && u.Architecture == arch && u.Type == type.ToString().ToLower());
+            var installUrl = _dbContext.InstallUrls.FirstOrDefault(u => u.Version.StartsWith(version) && u.Architecture == arch && u.Type == type.ToString().ToLower());
 
             if (installUrl == null)
             {
-                Console.WriteLine($"Version {version} not found");
+                Console.WriteLine($"Download url not found for version {version}");
                 return;
             }
 
-            //var installUrl = _dbContext.InstallUrls.FirstOrDefault(u => u.version == version);
             var url = installUrl.Url;
 
-            var path = Path.Join(Directory.GetCurrentDirectory(), "php" + version);
-            var zipPath = Path.Join(Directory.GetCurrentDirectory(), "php" + version + ".zip");
+            var path = Path.Join(Directory.GetCurrentDirectory(), "php" + installUrl.Version);
+            var zipPath = Path.Join(Directory.GetCurrentDirectory(), "php" + installUrl.Version + ".zip");
 
-            if(File.Exists(zipPath))
+            if (File.Exists(zipPath))
             {
                 File.Delete(zipPath);
             }
 
-            Console.WriteLine($"Downloading...");
+            Console.WriteLine($"Downloading... 0%");
 
-            using (HttpClient client = new())
+            using (var client = new HttpClientDownloadWithProgress(url, zipPath))
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36");
-                var response = client.GetAsync(url).Result;
-                response.EnsureSuccessStatusCode();
-                using var stream = response.Content.ReadAsStream();
-                using var fileStream = new FileStream(zipPath, FileMode.CreateNew);
-                
-                stream.CopyToAsync(fileStream).Wait();
+                client.ProgressChanged += (totalFileSize, totalBytesDownloaded, progressPercentage) =>
+                {
+                    ClearLastLine();
+                    Console.WriteLine($"downloading... {progressPercentage}%");
+                };
+
+                var awaitResponse = client.StartDownload();
+                awaitResponse.Wait();
+
             }
-            if(Directory.Exists(path))
+
+            if (Directory.Exists(path))
             {
                 Directory.Delete(path, true);
             }
             ZipFile.ExtractToDirectory(zipPath, path);
 
+            UpdateIniFile(path);
+
+            var phpVersions = _dbContext.PhpVersions.Where(x => x.Version == installUrl.Version).ToList();
+
+            if (phpVersions.Count > 0)
+            {
+                phpVersions.ForEach((x) =>
+                {
+                    _dbContext.PhpVersions.Remove(x);
+                });
+            }
+
+            _dbContext.SaveChanges();
+
             _dbContext.PhpVersions.Add(new PhpVersion
             {
-                Version = version,
+                Version = installUrl.Version,
                 Path = path
             });
 
             _dbContext.SaveChanges();
-            Console.WriteLine($"Added version {version}");
+            Console.WriteLine($"installed successfully {installUrl.Version}");
+        }
+
+        [Ignore]
+        public static void UpdateIniFile(string path)
+        {
+            var iniPath = Path.Join(path, "php.ini");
+            if(!File.Exists(iniPath))
+            {
+                var devPath = Path.Join(path, "php.ini-development");
+                File.Copy(devPath, iniPath);
+            }
+
+            var ini = File.ReadAllLines(iniPath).ToList();
+            var extensionDir = ini.FirstOrDefault(x => x.StartsWith("extension_dir") || x.StartsWith(";extension_dir"));
+            var extensionDirIndex = ini.IndexOf(extensionDir);
+            ini[extensionDirIndex] = $"extension_dir = \"ext\"";
+
+            var extension = ini.FirstOrDefault(x => x.StartsWith(";extension=curl"));
+            var extensionIndex = ini.IndexOf(extension);
+            ini[extensionIndex] = "extension=curl";
+
+            File.WriteAllLines(iniPath, ini);
+        }
+
+        [Ignore]
+        public static void ClearLastLine()
+        {
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.BufferWidth));
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
         }
         [Ignore]
         private void UpdateList()

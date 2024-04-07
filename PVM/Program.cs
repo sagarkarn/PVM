@@ -22,5 +22,6 @@ app.AddCommands<ListCommand>();
 app.AddCommands<IniCommand>();
 app.AddCommands<ExtCommand>();
 app.AddCommands<InstallCommand>();
+app.AddCommands<ExtEnableCommand>();
 
 app.Run();

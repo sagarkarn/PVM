@@ -22,7 +22,7 @@ namespace PVM.Commands
 
         public void Use([Argument]string version)
         {
-            var phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.Version == version);
+            var phpVersion = _dbContext.PhpVersions.OrderByDescending(x=>x.Version). FirstOrDefault(v => v.Version.StartsWith(version));
             if (phpVersion == null)
             {
                 Console.WriteLine($"Version {version} not found");
