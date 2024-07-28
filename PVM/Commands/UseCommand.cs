@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PVM.Data;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -20,6 +21,7 @@ namespace PVM.Commands
             _dbContext.Database.Migrate();
         }
 
+        [Command(Description = "Switch to use the specified version")]
         public void Use([Argument]string version)
         {
             var phpVersion = _dbContext.PhpVersions.OrderByDescending(x=>x.Version). FirstOrDefault(v => v.Version.StartsWith(version));

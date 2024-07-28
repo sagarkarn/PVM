@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Cocona;
+using Microsoft.EntityFrameworkCore;
 using PVM.Data;
 
 namespace PVM.Commands
@@ -12,7 +13,7 @@ namespace PVM.Commands
             _dbContext = dbContext;
             _dbContext.Database.Migrate();
         }
-
+        [Command(Description = "List all installed php version with its paths")]
         public void List()
         {
             Console.WriteLine("Current working directory: " + System.AppContext.BaseDirectory);

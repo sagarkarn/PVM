@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Cocona;
+using Microsoft.EntityFrameworkCore;
 using PVM.Data;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace PVM.Commands
             _dbContext.Database.Migrate();
         }
 
+        [Command(Description = "Open php.ini file in notepad")]
         public void Ini()
         {
             var phpVersions = _dbContext.PhpVersions.ToList();

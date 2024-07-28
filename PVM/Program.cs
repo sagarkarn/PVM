@@ -16,6 +16,7 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
 
 var app = builder.Build();
 
+
 app.AddCommands<UseCommand>();
 app.AddCommands<AddCommand>();
 app.AddCommands<ListCommand>();

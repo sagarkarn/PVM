@@ -9,6 +9,7 @@ namespace PVM.Commands
 {
     public class ExtEnableCommand
     {
+        [Command(Description = "Enable extension that is alreay installed in current php version")]
         public void ExtEnable([Argument]string ext)
         {
             if (!DllInExtDir(ext))

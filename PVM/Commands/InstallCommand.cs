@@ -22,7 +22,7 @@ namespace PVM.Commands
             _dbContext = dbContext;
             _dbContext.Database.Migrate();
         }
-
+        [Command("To download and install specific versio on the system.")]
         public async void Install([Argument] string version, [Description("Only nts and ts value is allowed")] Type type = Type.Nts)
         {
             var phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.Version.StartsWith(version));
@@ -134,29 +134,36 @@ namespace PVM.Commands
         {
             using (HttpClient client = new())
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36");
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246");
                 var response = client.GetAsync("https://windows.php.net/downloads/releases/").Result;
                 response.EnsureSuccessStatusCode();
                 var html = response.Content.ReadAsStringAsync().Result;
                 var doc = new HtmlDocument();
                 doc.LoadHtml(html);
                 var nodes = doc.DocumentNode.SelectNodes("//a");
+                if(nodes.Count == 0)
+                {
+                    Console.WriteLine("No url found!");
+                }
+                _dbContext.InstallUrls.RemoveRange(_dbContext.InstallUrls.ToList());
                 foreach (var node in nodes)
                 {
                     var href = node.GetAttributeValue("href", "");
                     if (href.Contains("php-") && !(href.Contains("debug") || href.Contains("devel") || href.Contains("test")))
                     {
+                        
                         var version = href.Split("-")[1];
-                        if (!_dbContext.InstallUrls.Any(u => u.Version == version))
-                        {
+                        var arch = href.Contains("x64") ? "x64" : "x86";
+                        var type = href.Contains("nts") ? "nts" : "ts";
+                        
                             _dbContext.InstallUrls.Add(new InstallUrl
                             {
                                 Version = version,
                                 Url = "https://windows.php.net" + href,
-                                Architecture = href.Contains("x64") ? "x64" : "x86",
-                                Type = href.Contains("nts") ? "nts" : "ts"
+                                Architecture = arch,
+                                Type = type
                             });
-                        }
+                        
                     }
                 }
                 _dbContext.SaveChanges();
