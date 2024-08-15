@@ -6,11 +6,9 @@ This project is aimed at simplifying the management of PHP versions on your syst
 
 ## Upcoming Features
 
-1. **Enable Extensions with Ease**: Enable PHP extensions with just one command, streamlining the process of making changes to ini file manually.
+1. **Install PHP Extensions from Terminal**: Install PHP extensions directly from the terminal, eliminating the process of copying and pasting and making changes to ini file.
 
-2. **Install PHP Extensions from Terminal**: Install PHP extensions directly from the terminal, eliminating the process of copying and pasting and making changes to ini file.
-
-3. **Configure PHP Settings from Terminal**: Access and modify various PHP configurations directly from the terminal, without needing to edit PHP configuration files manually.
+2. **Configure PHP Settings from Terminal**: Access and modify various PHP configurations directly from the terminal, without needing to edit PHP configuration files manually.
 
 ## Setup
 
