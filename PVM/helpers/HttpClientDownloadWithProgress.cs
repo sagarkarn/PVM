@@ -1,27 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace PVM.helpers;
 
-public class HttpClientDownloadWithProgress : IDisposable
+public class HttpClientDownloadWithProgress(string downloadUrl, string destinationFilePath) : IDisposable
 {
-    private readonly string _downloadUrl;
-    private readonly string _destinationFilePath;
+    private readonly string _downloadUrl = downloadUrl;
+    private readonly string _destinationFilePath = destinationFilePath;
 
     private HttpClient _httpClient;
 
     public delegate void ProgressChangedHandler(long? totalFileSize, long totalBytesDownloaded, double? progressPercentage);
 
     public event ProgressChangedHandler ProgressChanged;
-
-    public HttpClientDownloadWithProgress(string downloadUrl, string destinationFilePath)
-    {
-        _downloadUrl = downloadUrl;
-        _destinationFilePath = destinationFilePath;
-    }
 
     public async Task StartDownload()
     {

@@ -13,7 +13,7 @@ namespace PVM.Commands
             _dbContext = dbContext;
             _dbContext.Database.Migrate();
         }
-        [Command("Open extension folder in file explorer of current php version.")]
+        [Command(Description = "Open extension folder in file explorer of current php version.")]
         public void Ext(string? version)
         {
             PhpVersion phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.IsCurrent);

@@ -18,7 +18,7 @@ namespace PVM.Commands
             _dbContext = dbContext;
             _dbContext.Database.Migrate();
         }
-        [Command("Let manage pvm add already installed php.")]
+        [Command(Description ="Let manage pvm add already installed php.")]
         public void Add(string version, string path)
         {
             var phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.Version == version);

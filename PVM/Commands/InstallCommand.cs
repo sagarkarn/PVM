@@ -22,7 +22,7 @@ namespace PVM.Commands
             _dbContext = dbContext;
             _dbContext.Database.Migrate();
         }
-        [Command("To download and install specific versio on the system.")]
+        [Command(Description = "To download and install specific versio on the system.")]
         public async void Install([Argument] string version, [Description("Only nts and ts value is allowed")] Type type = Type.Nts)
         {
             var phpVersion = _dbContext.PhpVersions.FirstOrDefault(v => v.Version.StartsWith(version));
