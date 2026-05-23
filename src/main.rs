@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use PVM::db::Db;
 use PVM::commands::{
     add_command, ext_command, ext_enable_command, ini_command, install_command, list_command,
-    use_command, PvmContext,
+    list_remote_command, uninstall_command, use_command, PvmContext,
 };
 
 #[derive(Parser)]
@@ -54,6 +54,14 @@ enum Commands {
         #[arg(long, default_value = "nts")]
         type_: PhpType,
     },
+    /// Uninstall/remove a registered PHP version.
+    Uninstall {
+        /// PHP Version to uninstall
+        version: String,
+    },
+    /// List all available remote PHP versions from windows.php.net.
+    #[command(name = "list-remote")]
+    ListRemote,
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -99,6 +107,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 PhpType::Ts => "ts",
             };
             install_command(&ctx, &version, type_str)?;
+        }
+        Commands::Uninstall { version } => {
+            uninstall_command(&ctx, &version)?;
+        }
+        Commands::ListRemote => {
+            list_remote_command(&ctx)?;
         }
     }
 

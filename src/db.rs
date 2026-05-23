@@ -184,4 +184,23 @@ impl Db {
             Ok(None)
         }
     }
+
+    pub fn get_install_urls(&self) -> Result<Vec<InstallUrl>> {
+        let mut stmt = self.conn.prepare("SELECT Id, Version, Url, Type, Architecture FROM InstallUrls ORDER BY Version DESC, Type, Architecture")?;
+        let rows = stmt.query_map([], |row| {
+            Ok(InstallUrl {
+                id: Some(row.get(0)?),
+                version: row.get(1)?,
+                url: row.get(2)?,
+                type_: row.get(3)?,
+                architecture: row.get(4)?,
+            })
+        })?;
+
+        let mut list = Vec::new();
+        for r in rows {
+            list.push(r?);
+        }
+        Ok(list)
+    }
 }

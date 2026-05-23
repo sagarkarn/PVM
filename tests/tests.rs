@@ -144,3 +144,61 @@ fn test_ext_enable_command() {
     assert!(!content.contains(";extension=curl"));
     assert!(content.contains(";extension=mbstring"));
 }
+
+#[test]
+fn test_uninstall_command() {
+    let (test_dir, ctx) = setup_test_context("test_uninstall_command");
+
+    // Add version 8.3.3
+    let local_php_1 = test_dir.join("local_php_1");
+    fs::create_dir_all(&local_php_1).unwrap();
+    fs::write(local_php_1.join("php.exe"), "php 8.3.3").unwrap();
+    add_command(&ctx, "8.3.3", &local_php_1.to_string_lossy()).unwrap();
+
+    // Add version 8.2.0
+    let local_php_2 = test_dir.join("local_php_2");
+    fs::create_dir_all(&local_php_2).unwrap();
+    fs::write(local_php_2.join("php.exe"), "php 8.2.0").unwrap();
+    add_command(&ctx, "8.2.0", &local_php_2.to_string_lossy()).unwrap();
+
+    // Use 8.2.0 (so 8.2.0 is active/current, and 8.3.3 is inactive/uninstalled-eligible)
+    use_command(&ctx, "8.2.0").unwrap();
+
+    let inactive_dir = test_dir.join("php8.3.3");
+    let active_dir = test_dir.join("php");
+    assert!(inactive_dir.exists());
+    assert!(active_dir.exists());
+
+    // Try to uninstall current active version (should be refused/no-op)
+    PVM::commands::uninstall_command(&ctx, "8.2.0").unwrap();
+    assert!(active_dir.exists());
+    assert!(ctx.db.get_php_version_exact("8.2.0").unwrap().is_some());
+
+    // Uninstall inactive version
+    PVM::commands::uninstall_command(&ctx, "8.3.3").unwrap();
+    assert!(!inactive_dir.exists());
+    assert!(ctx.db.get_php_version_exact("8.3.3").unwrap().is_none());
+}
+
+#[test]
+fn test_list_remote_command() {
+    let (_test_dir, ctx) = setup_test_context("test_list_remote_command");
+    
+    // Test that the database method get_install_urls works and starts empty
+    let list = ctx.db.get_install_urls().unwrap();
+    assert!(list.is_empty());
+    
+    // Add mock install urls
+    ctx.db.add_install_url(&PVM::db::InstallUrl {
+        id: None,
+        version: "8.3.3".to_string(),
+        url: "https://windows.php.net/downloads/releases/php-8.3.3-Win32-vs16-x64.zip".to_string(),
+        type_: "nts".to_string(),
+        architecture: "x64".to_string(),
+    }).unwrap();
+    
+    let list_after = ctx.db.get_install_urls().unwrap();
+    assert_eq!(list_after.len(), 1);
+    assert_eq!(list_after[0].version, "8.3.3");
+}
+
