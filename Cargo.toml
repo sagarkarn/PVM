@@ -1,0 +1,15 @@
+[package]
+name = "PVM"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+rusqlite = { version = "0.31", features = ["bundled"] }
+reqwest = { version = "0.12", features = ["blocking"] }
+scraper = "0.19"
+zip = "0.6"
+thiserror = "1.0"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
