@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use PVM::db::Db;
 use PVM::commands::{
     add_command, ext_command, ext_enable_command, ini_command, install_command, list_command,
-    list_remote_command, uninstall_command, use_command, PvmContext,
+    list_remote_command, setup_command, uninstall_command, use_command, PvmContext,
 };
 
 #[derive(Parser)]
@@ -62,6 +62,8 @@ enum Commands {
     /// List all available remote PHP versions from windows.php.net.
     #[command(name = "list-remote")]
     ListRemote,
+    /// Set up PVM path configurations and import existing PHP installations (requires Administrator).
+    Setup,
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -81,7 +83,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = Db::new(&db_path)?;
     let ctx = PvmContext { base_dir, db };
 
-    let cli = Cli::parse();
+    let args: Vec<String> = std::env::args()
+        .filter(|a| a != "--pvm-auto-elevated")
+        .collect();
+    let cli = Cli::parse_from(args);
     match cli.command {
         Commands::Add { version, path } => {
             add_command(&ctx, &version, &path)?;
@@ -113,6 +118,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::ListRemote => {
             list_remote_command(&ctx)?;
+        }
+        Commands::Setup => {
+            setup_command(&ctx)?;
         }
     }
 

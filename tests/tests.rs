@@ -202,3 +202,53 @@ fn test_list_remote_command() {
     assert_eq!(list_after[0].version, "8.3.3");
 }
 
+#[test]
+fn test_clean_and_update_path_string() {
+    use std::path::Path;
+    use PVM::helpers::clean_and_update_path_string;
+
+    let pvm_dir = Path::new(r"C:\Users\devsa\.pvm");
+    let pvm_php_dir = Path::new(r"C:\Users\devsa\.pvm\php");
+    let old_php_dir = Path::new(r"C:\php");
+
+    // Case 1: Simple PATH containing old PHP and other system dirs.
+    // It should remove old PHP, and append PVM and PVM/php.
+    let current_path = r"C:\Windows;C:\Windows\System32;C:\php;C:\Program Files\Git\cmd";
+    let new_path = clean_and_update_path_string(
+        current_path,
+        Some(old_php_dir),
+        pvm_dir,
+        pvm_php_dir,
+    )
+    .unwrap();
+
+    // Verify it split/joined correctly with semicolon on Windows style paths
+    let paths: Vec<String> = std::env::split_paths(&new_path)
+        .map(|p| p.to_string_lossy().to_string())
+        .collect();
+    
+    assert!(!paths.contains(&r"C:\php".to_string()));
+    assert!(paths.contains(&r"C:\Users\devsa\.pvm".to_string()));
+    assert!(paths.contains(&r"C:\Users\devsa\.pvm\php".to_string()));
+    assert!(paths.contains(&r"C:\Windows".to_string()));
+
+    // Case 2: PVM paths already exist, and no old PHP directory to remove.
+    // The PATH should contain both PVM paths.
+    let current_path_2 = r"C:\Windows;C:\Users\devsa\.pvm;C:\Users\devsa\.pvm\php";
+    let new_path_2 = clean_and_update_path_string(
+        current_path_2,
+        None,
+        pvm_dir,
+        pvm_php_dir,
+    )
+    .unwrap();
+    
+    let paths_2: Vec<String> = std::env::split_paths(&new_path_2)
+        .map(|p| p.to_string_lossy().to_string())
+        .collect();
+        
+    assert!(paths_2.contains(&r"C:\Users\devsa\.pvm".to_string()));
+    assert!(paths_2.contains(&r"C:\Users\devsa\.pvm\php".to_string()));
+}
+
+

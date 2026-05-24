@@ -1,7 +1,7 @@
 use reqwest::blocking::Client;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Recursively copies a directory from src to dst.
 pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> {
@@ -19,7 +19,10 @@ pub fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<
 }
 
 /// Downloads a URL to a file, updating progress percentages in stdout.
-pub fn download_file_with_progress(url: &str, dest_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+pub fn download_file_with_progress(
+    url: &str,
+    dest_path: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::builder()
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36")
         .build()?;
@@ -62,9 +65,15 @@ pub fn scrape_php_releases() -> Result<Vec<crate::db::InstallUrl>, Box<dyn std::
     let client = Client::builder()
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246")
         .build()?;
-    let response = client.get("https://windows.php.net/downloads/releases/").send()?;
+    let response = client
+        .get("https://windows.php.net/downloads/releases/")
+        .send()?;
     if !response.status().is_success() {
-        return Err(format!("Failed to retrieve PHP releases list: {}", response.status()).into());
+        return Err(format!(
+            "Failed to retrieve PHP releases list: {}",
+            response.status()
+        )
+        .into());
     }
 
     let html = response.text()?;
@@ -75,13 +84,23 @@ pub fn scrape_php_releases() -> Result<Vec<crate::db::InstallUrl>, Box<dyn std::
     for element in document.select(&selector) {
         if let Some(href) = element.value().attr("href") {
             // Check filters: must contain "php-" and NOT contain debug, devel, test
-            if href.contains("php-") && !(href.contains("debug") || href.contains("devel") || href.contains("test")) {
+            if href.contains("php-")
+                && !(href.contains("debug") || href.contains("devel") || href.contains("test"))
+            {
                 let filename = href.split('/').last().unwrap_or("");
                 let parts: Vec<&str> = filename.split('-').collect();
                 if parts.len() > 1 {
                     let version = parts[1].to_string();
-                    let arch = if filename.contains("x64") { "x64" } else { "x86" };
-                    let type_ = if filename.contains("nts") { "nts" } else { "ts" };
+                    let arch = if filename.contains("x64") {
+                        "x64"
+                    } else {
+                        "x86"
+                    };
+                    let type_ = if filename.contains("nts") {
+                        "nts"
+                    } else {
+                        "ts"
+                    };
 
                     let full_url = if href.starts_with('/') {
                         format!("https://windows.php.net{}", href)
@@ -150,8 +169,11 @@ pub fn update_ini_file(php_path: &Path) -> Result<(), Box<dyn std::error::Error>
     let content = fs::read_to_string(&ini_path)?;
     let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
 
-    // 1. Configure extension_dir to "ext"
-    if let Some(index) = lines.iter().position(|l| l.starts_with("extension_dir") || l.starts_with(";extension_dir")) {
+    // Configure extension_dir to "ext"
+    if let Some(index) = lines
+        .iter()
+        .position(|l| l.starts_with("extension_dir") || l.starts_with(";extension_dir"))
+    {
         lines[index] = "extension_dir = \"ext\"".to_string();
     }
 
@@ -162,4 +184,56 @@ pub fn update_ini_file(php_path: &Path) -> Result<(), Box<dyn std::error::Error>
 
     fs::write(&ini_path, lines.join("\r\n"))?;
     Ok(())
+}
+
+/// Cleans a path string by removing an optional folder and adding PVM directories.
+pub fn clean_and_update_path_string(
+    current_path_str: &str,
+    remove_dir: Option<&Path>,
+    pvm_dir: &Path,
+    pvm_php_dir: &Path,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let mut path_dirs: Vec<PathBuf> = std::env::split_paths(current_path_str).collect();
+
+    // Remove old PHP dir if found
+    if let Some(rm_dir) = remove_dir {
+        let rm_dir_canonical = rm_dir
+            .canonicalize()
+            .unwrap_or_else(|_| rm_dir.to_path_buf());
+        path_dirs.retain(|p: &PathBuf| {
+            p.canonicalize().unwrap_or_else(|_| p.clone()) != rm_dir_canonical
+        });
+    }
+
+    let mut pvm_dir_exists = false;
+    let mut pvm_php_dir_exists = false;
+
+    let pvm_dir_canonical = pvm_dir
+        .canonicalize()
+        .unwrap_or_else(|_| pvm_dir.to_path_buf());
+    let pvm_php_dir_canonical = pvm_php_dir
+        .canonicalize()
+        .unwrap_or_else(|_| pvm_php_dir.to_path_buf());
+
+    for dir in &path_dirs {
+        let dir_canonical = dir.canonicalize().unwrap_or_else(|_| dir.clone());
+        if dir_canonical == pvm_dir_canonical {
+            pvm_dir_exists = true;
+        }
+        if dir_canonical == pvm_php_dir_canonical {
+            pvm_php_dir_exists = true;
+        }
+    }
+
+    if !pvm_dir_exists {
+        path_dirs.push(pvm_dir.to_path_buf());
+    }
+    if !pvm_php_dir_exists {
+        path_dirs.push(pvm_php_dir.to_path_buf());
+    }
+
+    let new_path_str = std::env::join_paths(path_dirs)?
+        .into_string()
+        .map_err(|_| "Failed to join environment paths")?;
+    Ok(new_path_str)
 }
