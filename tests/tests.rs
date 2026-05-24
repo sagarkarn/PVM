@@ -254,4 +254,83 @@ fn test_clean_and_update_path_string() {
     assert!(paths_2.contains(&r"C:\Users\devsa\.pvm\php".to_string()));
 }
 
+#[test]
+fn test_settings_table() {
+    let (_test_dir, ctx) = setup_test_context("test_settings_table");
+
+    // Setting should not exist initially
+    let val = ctx.db.get_setting("NonExistentKey").unwrap();
+    assert!(val.is_none());
+
+    // Set setting
+    ctx.db.set_setting("TestKey", "TestValue").unwrap();
+    let val2 = ctx.db.get_setting("TestKey").unwrap();
+    assert_eq!(val2, Some("TestValue".to_string()));
+
+    // Update setting (upsert)
+    ctx.db.set_setting("TestKey", "NewValue").unwrap();
+    let val3 = ctx.db.get_setting("TestKey").unwrap();
+    assert_eq!(val3, Some("NewValue".to_string()));
+}
+
+#[test]
+fn test_version_comparison() {
+    use PVM::commands::is_newer_version;
+    assert!(is_newer_version("v1.0.0", "v1.0.1"));
+    assert!(is_newer_version("1.0.0", "v1.1.0"));
+    assert!(is_newer_version("1.0.0", "2.0.0"));
+    assert!(!is_newer_version("v1.0.1", "v1.0.0"));
+    assert!(!is_newer_version("1.0.0", "1.0.0"));
+    assert!(!is_newer_version("2.0.0", "1.9.9"));
+    assert!(is_newer_version("1.0", "1.0.1"));
+    assert!(!is_newer_version("1.0.1", "1.0"));
+}
+
+#[test]
+fn test_update_check_throttling() {
+    let (_test_dir, ctx) = setup_test_context("test_update_check_throttling");
+
+    // Temporarily allow update checks to bypass the PVM_TEST_MODE skip block
+    unsafe {
+        std::env::set_var("PVM_ALLOW_UPDATE_TEST", "1");
+    }
+
+    // Now let's test throttling.
+    // First, let's set LastUpdateCheck to a recent timestamp (e.g. now)
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    ctx.db.set_setting("LastUpdateCheck", &now_secs.to_string()).unwrap();
+
+    // Call auto_update_check. Since last check was now, it should NOT check again and should return Ok(())
+    // directly without querying GitHub (which would fail/error out or take time in sandbox/offline).
+    // If it did check, it would call check_for_update, which sends a reqwest. Since we are in a test environment,
+    // we want to ensure it doesn't try to make network requests.
+    // If it is throttled, it returns Ok(()) immediately without calling check_for_update.
+    let res = PVM::commands::auto_update_check(&ctx);
+    assert!(res.is_ok());
+
+    // Now let's set LastUpdateCheck to more than 24 hours ago (e.g. 25 hours ago)
+    let old_secs = now_secs - 90000; // 25 hours ago
+    ctx.db.set_setting("LastUpdateCheck", &old_secs.to_string()).unwrap();
+
+    // If we call auto_update_check now, it should try to check, which would fail or try to connect to GitHub.
+    // Since we are in an offline test, it will fail network connection, but it should not return Err because
+    // check_for_update error is caught inside auto_update_check.
+    // However, before check_for_update is called, auto_update_check sets LastUpdateCheck to the current timestamp.
+    // We verify that it attempted the check by checking if "LastUpdateCheck" was updated to a newer timestamp.
+    let res2 = PVM::commands::auto_update_check(&ctx);
+    assert!(res2.is_ok());
+
+    let updated_check = ctx.db.get_setting("LastUpdateCheck").unwrap().unwrap().parse::<u64>().unwrap();
+    assert!(updated_check >= now_secs);
+
+    // Clean up environment variable
+    unsafe {
+        std::env::remove_var("PVM_ALLOW_UPDATE_TEST");
+    }
+}
+
 
