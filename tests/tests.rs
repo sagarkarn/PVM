@@ -13,6 +13,9 @@ fn setup_test_context(name: &str) -> (PathBuf, PvmContext) {
         let _ = fs::remove_dir_all(&test_dir);
     }
     fs::create_dir_all(&test_dir).unwrap();
+    unsafe {
+        std::env::set_var("PVM_TEST_MODE", "1");
+    }
 
     let db_path = test_dir.join("pvm.db");
     let db = Db::new(&db_path).unwrap();

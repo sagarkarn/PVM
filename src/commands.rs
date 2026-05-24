@@ -95,8 +95,6 @@ pub fn use_command(ctx: &PvmContext, version: &str) -> Result<(), Box<dyn std::e
             &moved_path.to_string_lossy(),
             false,
         )?;
-
-        return setup_command(ctx);
     }
 
     // 2. Move target version directory to active php directory
@@ -108,6 +106,7 @@ pub fn use_command(ctx: &PvmContext, version: &str) -> Result<(), Box<dyn std::e
         true,
     )?;
     println!("Using version {}", php_version.version);
+    setup_command(ctx)?;
     Ok(())
 }
 
@@ -360,6 +359,10 @@ pub fn list_remote_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::E
 
 /// Set up PVM system environment path and import existing PHP version if found.
 pub fn setup_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::Error>> {
+    if std::env::var("PVM_TEST_MODE").is_ok() {
+        return Ok(());
+    }
+
     #[cfg(target_os = "windows")]
     run_elevated_if_needed()?;
 
