@@ -4,7 +4,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use PVM::db::Db;
 use PVM::commands::{
     add_command, ext_command, ext_enable_command, ini_command, install_command, list_command,
-    list_remote_command, setup_command, uninstall_command, use_command, PvmContext,
+    list_remote_command, setup_command, uninstall_command, use_command, self_update_command,
+    auto_update_check, PvmContext,
 };
 
 #[derive(Parser)]
@@ -64,6 +65,9 @@ enum Commands {
     ListRemote,
     /// Set up PVM path configurations and import existing PHP installations (requires Administrator).
     Setup,
+    /// Update PVM to the latest version from GitHub.
+    #[command(name = "self-update")]
+    SelfUpdate,
 }
 
 #[derive(ValueEnum, Clone, Copy, Debug, PartialEq, Eq)]
@@ -74,6 +78,12 @@ enum PhpType {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let exe_path = std::env::current_exe()?;
+    let mut old_exe = exe_path.clone();
+    old_exe.set_extension("exe.old");
+    if old_exe.exists() {
+        let _ = std::fs::remove_file(&old_exe);
+    }
+
     let base_dir = exe_path
         .parent()
         .ok_or("Failed to get executable directory")?
@@ -82,6 +92,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db_path = base_dir.join("pvm.db");
     let db = Db::new(&db_path)?;
     let ctx = PvmContext { base_dir, db };
+
+    // Trigger daily update check in the background/inline
+    let _ = auto_update_check(&ctx);
 
     let args: Vec<String> = std::env::args()
         .filter(|a| a != "--pvm-auto-elevated")
@@ -121,6 +134,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::Setup => {
             setup_command(&ctx)?;
+        }
+        Commands::SelfUpdate => {
+            self_update_command(&ctx)?;
         }
     }
 

@@ -52,6 +52,14 @@ impl Db {
             [],
         )?;
 
+        self.conn.execute(
+            "CREATE TABLE IF NOT EXISTS Settings (
+                Key TEXT PRIMARY KEY,
+                Value TEXT NOT NULL
+            );",
+            [],
+        )?;
+
         Ok(())
     }
 
@@ -202,5 +210,24 @@ impl Db {
             list.push(r?);
         }
         Ok(list)
+    }
+
+    pub fn get_setting(&self, key: &str) -> Result<Option<String>> {
+        let mut stmt = self.conn.prepare("SELECT Value FROM Settings WHERE Key = ? LIMIT 1")?;
+        let mut rows = stmt.query_map([key], |row| row.get::<_, String>(0))?;
+        if let Some(res) = rows.next() {
+            Ok(Some(res?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn set_setting(&self, key: &str, value: &str) -> Result<()> {
+        self.conn.execute(
+            "INSERT INTO Settings (Key, Value) VALUES (?, ?)
+             ON CONFLICT(Key) DO UPDATE SET Value = excluded.Value",
+            params![key, value],
+        )?;
+        Ok(())
     }
 }
