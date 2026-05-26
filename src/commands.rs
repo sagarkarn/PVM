@@ -9,6 +9,7 @@ pub mod uninstall;
 pub mod list_remote;
 pub mod setup;
 pub mod self_update;
+pub mod version;
 
 use crate::db::Db;
 use std::path::PathBuf;
@@ -29,3 +30,4 @@ pub use uninstall::uninstall_command;
 pub use list_remote::list_remote_command;
 pub use setup::setup_command;
 pub use self_update::{self_update_command, auto_update_check, is_newer_version};
+pub use version::{version_command, PVM_VERSION};

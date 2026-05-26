@@ -36,7 +36,7 @@ pub fn check_for_update(_ctx: &PvmContext) -> Result<Option<(String, String)>, B
         .and_then(|v| v.as_str())
         .ok_or("Failed to parse tag_name from GitHub API response")?;
 
-    let current_ver = env!("CARGO_PKG_VERSION");
+    let current_ver = crate::commands::PVM_VERSION;
     if is_newer_version(current_ver, tag_name) {
         let assets = json.get("assets")
             .and_then(|v| v.as_array())
@@ -89,7 +89,7 @@ pub fn auto_update_check(ctx: &PvmContext) -> Result<(), Box<dyn std::error::Err
 
         // Perform the check (catch error so the main command continues running!)
         if let Ok(Some((tag_name, _))) = check_for_update(ctx) {
-            println!("\n[Notice] A new version of PVM is available: {} (current: v{}).", tag_name, env!("CARGO_PKG_VERSION"));
+            println!("\n[Notice] A new version of PVM is available: {} (current: v{}).", tag_name, crate::commands::PVM_VERSION);
             println!("Run 'pvm self-update' to update automatically.\n");
         }
     }
@@ -104,7 +104,7 @@ pub fn self_update_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::E
     let (tag_name, download_url) = match update {
         Some(val) => val,
         None => {
-            println!("PVM is already up-to-date (v{}).", env!("CARGO_PKG_VERSION"));
+            println!("PVM is already up-to-date (v{}).", crate::commands::PVM_VERSION);
             return Ok(());
         }
     };

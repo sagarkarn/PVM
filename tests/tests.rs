@@ -333,4 +333,12 @@ fn test_update_check_throttling() {
     }
 }
 
+#[test]
+fn test_version_command() {
+    let (_test_dir, ctx) = setup_test_context("test_version_command");
+    let res = PVM::commands::version_command(&ctx);
+    assert!(res.is_ok());
+    assert_eq!(PVM::commands::PVM_VERSION, env!("CARGO_PKG_VERSION"));
+}
+
 

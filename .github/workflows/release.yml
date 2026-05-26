@@ -35,11 +35,19 @@ jobs:
           $version = "${{ github.ref_name }}"
           $zipName = "pvm-${version}-windows-x64.zip"
           Compress-Archive -Path target/release/PVM.exe, README.md, LICENSE -DestinationPath $zipName
+          
+          # Copy exe with name including version/architecture
+          $exeName = "pvm-${version}-windows-x64.exe"
+          Copy-Item -Path target/release/PVM.exe -Destination $exeName
+          
           echo "ZIP_NAME=$zipName" >> $env:GITHUB_ENV
+          echo "EXE_NAME=$exeName" >> $env:GITHUB_ENV
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.ZIP_NAME }}
+          files: |
+            ${{ env.ZIP_NAME }}
+            ${{ env.EXE_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
