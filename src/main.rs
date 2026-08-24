@@ -2,9 +2,9 @@
 
 use PVM::commands::ext::ExtCommand;
 use PVM::commands::{
-    PvmContext, add_command, auto_update_check, ext_command, ext_enable_command, ini_command,
-    install_command, list_command, list_remote_command, self_update_command, setup_command,
-    uninstall_command, use_command, version_command,
+    PvmContext, add_command, auto_update_check, ext_command, ini_command, install_command,
+    list_command, list_remote_command, self_update_command, setup_command, uninstall_command,
+    use_command, version_command,
 };
 use PVM::db::Db;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -49,12 +49,6 @@ enum Commands {
         /// Optional command to run on the extension folder
         #[command(subcommand)]
         command: Option<ExtCommand>,
-    },
-    /// Enable extension that is already installed in current php version
-    #[command(name = "ext-enable")]
-    ExtEnable {
-        /// Name of extension to enable (e.g. curl)
-        ext: String,
     },
     /// To download and install specific version on the system.
     Install {
@@ -127,9 +121,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             Commands::Ext { version, command } => {
                 ext_command(&ctx, version, command)?;
-            }
-            Commands::ExtEnable { ext } => {
-                ext_enable_command(&ctx, &ext)?;
             }
             Commands::Install { version, type_ } => {
                 let type_str = match type_ {

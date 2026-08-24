@@ -1,7 +1,7 @@
-use crate::commands::PvmContext;
 use std::fs;
 
-/// Enable extension in active php.ini.
+use crate::commands::PvmContext;
+
 pub fn ext_enable_command(ctx: &PvmContext, ext: &str) -> Result<(), Box<dyn std::error::Error>> {
     let active_php_dir = ctx.base_dir.join("php");
     let ext_dir = active_php_dir.join("ext");
