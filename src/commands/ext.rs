@@ -1,6 +1,7 @@
 pub mod enable;
 pub mod list;
 pub mod open;
+pub mod search;
 
 use crate::commands::{PvmContext, ext::open::ext_open_command};
 use clap::Subcommand;
@@ -11,6 +12,7 @@ pub enum ExtCommand {
     Open,
     List,
     Enable { ext: String },
+    Search { query: String },
 }
 
 pub fn ext_command(
@@ -46,6 +48,7 @@ pub fn ext_command(
         ExtCommand::Open => ext_open_command(&ext_path)?,
         ExtCommand::List => list::list_ext_command(&ext_path, &php_version)?,
         ExtCommand::Enable { ext } => enable::ext_enable_command(ctx, &ext)?,
+        ExtCommand::Search { query } => search::PackagistClient::new().search_extension(&query)?,
     }
     Ok(())
 }
