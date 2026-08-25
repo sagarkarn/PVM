@@ -1,14 +1,16 @@
+use anyhow::Result;
+
 use crate::commands::PvmContext;
 use std::path::Path;
 
 /// Set up PVM system environment path and import existing PHP version if found.
-pub fn setup_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::Error>> {
+pub fn setup_command(ctx: &PvmContext) -> Result<()> {
     if std::env::var("PVM_TEST_MODE").is_ok() {
         return Ok(());
     }
 
     #[cfg(target_os = "windows")]
-    run_elevated_if_needed()?;
+    run_elevated_if_needed().unwrap();
 
     // PHP Detection
     let mut old_php_dir = None;
@@ -57,7 +59,7 @@ pub fn setup_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::Error>>
     // Registry PATH modification
     #[cfg(target_os = "windows")]
     {
-        update_system_path_windows(ctx, old_php_dir.as_deref())?;
+        update_system_path_windows(ctx, old_php_dir.as_deref()).unwrap();
     }
     #[cfg(not(target_os = "windows"))]
     {

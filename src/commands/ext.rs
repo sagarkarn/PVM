@@ -1,4 +1,5 @@
 pub mod enable;
+pub mod info;
 pub mod list;
 pub mod open;
 pub mod search;
@@ -13,16 +14,17 @@ pub enum ExtCommand {
     List,
     Enable { ext: String },
     Search { query: String },
+    Info { ext: String },
 }
 
 pub fn ext_command(
     ctx: &PvmContext,
     version: Option<String>,
     command: Option<ExtCommand>,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> anyhow::Result<()> {
     let php_version = match version {
-        Some(ver) => ctx.db.get_php_version_exact(&ver)?,
-        None => ctx.db.get_current_php_version()?,
+        Some(ver) => ctx.db.get_php_version_exact(&ver).unwrap(),
+        None => ctx.db.get_current_php_version().unwrap(),
     };
 
     let command = match command {
@@ -45,10 +47,12 @@ pub fn ext_command(
     }
 
     match command {
-        ExtCommand::Open => ext_open_command(&ext_path)?,
-        ExtCommand::List => list::list_ext_command(&ext_path, &php_version)?,
-        ExtCommand::Enable { ext } => enable::ext_enable_command(ctx, &ext)?,
-        ExtCommand::Search { query } => search::PackagistClient::new().search_extension(&query)?,
+        ExtCommand::Open => ext_open_command(&ext_path),
+        ExtCommand::List => list::list_ext_command(&ext_path, &php_version),
+        ExtCommand::Enable { ext } => enable::ext_enable_command(ctx, &ext),
+        ExtCommand::Search { query } => search::PackagistClient::new().search_extension(&query),
+        ExtCommand::Info { ext } => info::ext_info_command(&ext_path, &ext),
     }
+    .unwrap();
     Ok(())
 }

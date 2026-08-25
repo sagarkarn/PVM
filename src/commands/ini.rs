@@ -1,9 +1,11 @@
+use anyhow::Result;
+
 use crate::commands::PvmContext;
 use std::fs;
 use std::path::Path;
 
 /// Open php.ini in Notepad.
-pub fn ini_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::Error>> {
+pub fn ini_command(ctx: &PvmContext) -> Result<()> {
     let current_version = match ctx.db.get_current_php_version()? {
         Some(v) => v,
         None => {

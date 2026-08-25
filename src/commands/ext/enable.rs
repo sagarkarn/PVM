@@ -1,8 +1,10 @@
 use std::fs;
 
+use anyhow::Result;
+
 use crate::commands::PvmContext;
 
-pub fn ext_enable_command(ctx: &PvmContext, ext: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn ext_enable_command(ctx: &PvmContext, ext: &str) -> Result<()> {
     let active_php_dir = ctx.base_dir.join("php");
     let ext_dir = active_php_dir.join("ext");
     let dll_name = format!("php_{}.dll", ext);
@@ -20,10 +22,10 @@ pub fn ext_enable_command(ctx: &PvmContext, ext: &str) -> Result<(), Box<dyn std
             println!("php.ini-development not found");
             return Ok(());
         }
-        fs::copy(&dev_path, &php_ini_path)?;
+        fs::copy(&dev_path, &php_ini_path).unwrap();
     }
 
-    let content = fs::read_to_string(&php_ini_path)?;
+    let content = fs::read_to_string(&php_ini_path).unwrap();
     let mut lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
 
     let target_enabled = format!("extension={}", ext);
@@ -36,7 +38,7 @@ pub fn ext_enable_command(ctx: &PvmContext, ext: &str) -> Result<(), Box<dyn std
 
     if let Some(index) = lines.iter().position(|l| l.trim() == target_disabled) {
         lines[index] = target_enabled;
-        fs::write(&php_ini_path, lines.join("\r\n"))?;
+        fs::write(&php_ini_path, lines.join("\r\n")).unwrap();
         println!("extension enabled");
     } else {
         println!("extension not found in ini file");

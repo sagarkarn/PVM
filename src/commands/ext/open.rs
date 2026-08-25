@@ -1,11 +1,14 @@
 use std::path::Path;
 
-pub fn ext_open_command(ext_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+use anyhow::Result;
+
+pub fn ext_open_command(ext_path: &Path) -> Result<()> {
     #[cfg(target_os = "windows")]
     {
         std::process::Command::new("explorer.exe")
             .arg(&ext_path)
-            .spawn()?;
+            .spawn()
+            .unwrap();
     }
     #[cfg(not(target_os = "windows"))]
     {

@@ -1,5 +1,4 @@
-use std::error::Error;
-
+use anyhow::Result;
 use reqwest::blocking::Client;
 
 pub struct PackagistClient {
@@ -28,12 +27,12 @@ impl PackagistClient {
         }
     }
 
-    pub fn search_extension(&self, query: &str) -> Result<(), Box<dyn Error>> {
+    pub fn search_extension(&self, query: &str) -> Result<()> {
         let url = format!("https://packagist.org/search.json?q={}&type=php-ext", query);
 
-        let response = self.client.get(&url).send()?;
-        let body = response.text()?;
-        let json: serde_json::Value = serde_json::from_str(&body)?;
+        let response = self.client.get(&url).send().unwrap();
+        let body = response.text().unwrap();
+        let json: serde_json::Value = serde_json::from_str(&body).unwrap();
 
         let total = json["total"].as_u64().unwrap_or(0);
         let results = json["results"].as_array().unwrap();

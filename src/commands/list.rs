@@ -1,12 +1,14 @@
+use anyhow::Result;
+
 use crate::commands::PvmContext;
 
 /// List all installed php versions.
-pub fn list_command(ctx: &PvmContext) -> Result<(), Box<dyn std::error::Error>> {
+pub fn list_command(ctx: &PvmContext) -> Result<()> {
     println!(
         "Current working directory: {}",
         ctx.base_dir.to_string_lossy()
     );
-    let versions = ctx.db.get_php_versions()?;
+    let versions = ctx.db.get_php_versions().unwrap();
     if versions.is_empty() {
         println!("No versions found");
         return Ok(());

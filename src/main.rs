@@ -7,6 +7,7 @@ use PVM::commands::{
     use_command, version_command,
 };
 use PVM::db::Db;
+use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
@@ -81,8 +82,8 @@ enum PhpType {
     Ts,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let exe_path = std::env::current_exe()?;
+fn main() -> Result<()> {
+    let exe_path = std::env::current_exe().unwrap();
     let mut old_exe = exe_path.clone();
     old_exe.set_extension("exe.old");
     if old_exe.exists() {
@@ -91,11 +92,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let base_dir = exe_path
         .parent()
-        .ok_or("Failed to get executable directory")?
+        .ok_or("Failed to get executable directory")
+        .unwrap()
         .to_path_buf();
 
     let db_path = base_dir.join("pvm.db");
-    let db = Db::new(&db_path)?;
+    let db = Db::new(&db_path).unwrap();
     let ctx = PvmContext { base_dir, db };
 
     // Trigger daily update check in the background/inline
@@ -108,47 +110,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         Some(cmd) => match cmd {
             Commands::Add { version, path } => {
-                add_command(&ctx, &version, &path)?;
+                add_command(&ctx, &version, &path).unwrap();
             }
             Commands::List => {
-                list_command(&ctx)?;
+                list_command(&ctx).unwrap();
             }
             Commands::Use { version } => {
-                use_command(&ctx, &version)?;
+                use_command(&ctx, &version).unwrap();
             }
             Commands::Ini => {
-                ini_command(&ctx)?;
+                ini_command(&ctx).unwrap();
             }
             Commands::Ext { version, command } => {
-                ext_command(&ctx, version, command)?;
+                ext_command(&ctx, version, command).unwrap();
             }
             Commands::Install { version, type_ } => {
                 let type_str = match type_ {
                     PhpType::Nts => "nts",
                     PhpType::Ts => "ts",
                 };
-                install_command(&ctx, &version, type_str)?;
+                install_command(&ctx, &version, type_str).unwrap();
             }
             Commands::Uninstall { version } => {
-                uninstall_command(&ctx, &version)?;
+                uninstall_command(&ctx, &version).unwrap();
             }
             Commands::ListRemote => {
-                list_remote_command(&ctx)?;
+                list_remote_command(&ctx).unwrap();
             }
             Commands::Setup => {
-                setup_command(&ctx)?;
+                setup_command(&ctx).unwrap();
             }
             Commands::SelfUpdate => {
-                self_update_command(&ctx)?;
+                self_update_command(&ctx).unwrap();
             }
             Commands::Version => {
-                version_command(&ctx)?;
+                version_command(&ctx).unwrap();
             }
         },
         None => {
             use clap::CommandFactory;
             let mut cmd = Cli::command();
-            cmd.print_help()?;
+            cmd.print_help().unwrap();
             println!();
         }
     }

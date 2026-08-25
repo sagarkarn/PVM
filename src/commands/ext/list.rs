@@ -1,13 +1,12 @@
 use std::{collections::HashSet, fs, path::Path, process::Command};
 
+use anyhow::Result;
+
 use crate::db::PhpVersion;
 
-pub fn list_ext_command(
-    ext_path: &Path,
-    php_version: &PhpVersion,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn list_ext_command(ext_path: &Path, php_version: &PhpVersion) -> Result<()> {
     let php_exe_path = Path::new(&php_version.path).join("php.exe");
-    let output = Command::new(php_exe_path).arg("-m").output()?;
+    let output = Command::new(php_exe_path).arg("-m").output().unwrap();
 
     if !output.status.success() {
         eprintln!("{}", String::from_utf8_lossy(&output.stderr));
@@ -24,8 +23,8 @@ pub fn list_ext_command(
         .map(str::to_lowercase)
         .collect();
 
-    for entry in fs::read_dir(ext_path)? {
-        let entry = entry?;
+    for entry in fs::read_dir(ext_path).unwrap() {
+        let entry = entry.unwrap();
         let file_name = entry.file_name();
         let file_name = file_name.to_string_lossy();
 
