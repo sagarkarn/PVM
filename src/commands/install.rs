@@ -12,7 +12,7 @@ pub fn install_command(ctx: &PvmContext, version: &str, type_str: &str) -> Resul
 
     // Scrape php releases from remote site
     let scraped_urls = crate::helpers::scrape_php_releases().unwrap();
-    ctx.db.clear_install_urls();
+    ctx.db.clear_install_urls().unwrap();
     for u in scraped_urls {
         ctx.db.add_install_url(&u).unwrap();
     }
