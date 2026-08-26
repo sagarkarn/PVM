@@ -1,7 +1,8 @@
+use PVM::commands::ext::enable::ext_enable_command;
+use PVM::commands::{PvmContext, add_command, list_command, use_command};
+use PVM::db::Db;
 use std::fs;
 use std::path::PathBuf;
-use PVM::db::Db;
-use PVM::commands::{add_command, list_command, use_command, ext_enable_command, PvmContext};
 
 fn setup_test_context(name: &str) -> (PathBuf, PvmContext) {
     let mut test_dir = std::env::current_dir().unwrap();
@@ -186,20 +187,23 @@ fn test_uninstall_command() {
 #[test]
 fn test_list_remote_command() {
     let (_test_dir, ctx) = setup_test_context("test_list_remote_command");
-    
+
     // Test that the database method get_install_urls works and starts empty
     let list = ctx.db.get_install_urls().unwrap();
     assert!(list.is_empty());
-    
+
     // Add mock install urls
-    ctx.db.add_install_url(&PVM::db::InstallUrl {
-        id: None,
-        version: "8.3.3".to_string(),
-        url: "https://windows.php.net/downloads/releases/php-8.3.3-Win32-vs16-x64.zip".to_string(),
-        type_: "nts".to_string(),
-        architecture: "x64".to_string(),
-    }).unwrap();
-    
+    ctx.db
+        .add_install_url(&PVM::db::InstallUrl {
+            id: None,
+            version: "8.3.3".to_string(),
+            url: "https://windows.php.net/downloads/releases/php-8.3.3-Win32-vs16-x64.zip"
+                .to_string(),
+            type_: "nts".to_string(),
+            architecture: "x64".to_string(),
+        })
+        .unwrap();
+
     let list_after = ctx.db.get_install_urls().unwrap();
     assert_eq!(list_after.len(), 1);
     assert_eq!(list_after[0].version, "8.3.3");
@@ -207,8 +211,8 @@ fn test_list_remote_command() {
 
 #[test]
 fn test_clean_and_update_path_string() {
-    use std::path::Path;
     use PVM::helpers::clean_and_update_path_string;
+    use std::path::Path;
 
     let pvm_dir = Path::new(r"C:\Users\devsa\.pvm");
     let pvm_php_dir = Path::new(r"C:\Users\devsa\.pvm\php");
@@ -217,19 +221,15 @@ fn test_clean_and_update_path_string() {
     // Case 1: Simple PATH containing old PHP and other system dirs.
     // It should remove old PHP, and append PVM and PVM/php.
     let current_path = r"C:\Windows;C:\Windows\System32;C:\php;C:\Program Files\Git\cmd";
-    let new_path = clean_and_update_path_string(
-        current_path,
-        Some(old_php_dir),
-        pvm_dir,
-        pvm_php_dir,
-    )
-    .unwrap();
+    let new_path =
+        clean_and_update_path_string(current_path, Some(old_php_dir), pvm_dir, pvm_php_dir)
+            .unwrap();
 
     // Verify it split/joined correctly with semicolon on Windows style paths
     let paths: Vec<String> = std::env::split_paths(&new_path)
         .map(|p| p.to_string_lossy().to_string())
         .collect();
-    
+
     assert!(!paths.contains(&r"C:\php".to_string()));
     assert!(paths.contains(&r"C:\Users\devsa\.pvm".to_string()));
     assert!(paths.contains(&r"C:\Users\devsa\.pvm\php".to_string()));
@@ -238,18 +238,13 @@ fn test_clean_and_update_path_string() {
     // Case 2: PVM paths already exist, and no old PHP directory to remove.
     // The PATH should contain both PVM paths.
     let current_path_2 = r"C:\Windows;C:\Users\devsa\.pvm;C:\Users\devsa\.pvm\php";
-    let new_path_2 = clean_and_update_path_string(
-        current_path_2,
-        None,
-        pvm_dir,
-        pvm_php_dir,
-    )
-    .unwrap();
-    
+    let new_path_2 =
+        clean_and_update_path_string(current_path_2, None, pvm_dir, pvm_php_dir).unwrap();
+
     let paths_2: Vec<String> = std::env::split_paths(&new_path_2)
         .map(|p| p.to_string_lossy().to_string())
         .collect();
-        
+
     assert!(paths_2.contains(&r"C:\Users\devsa\.pvm".to_string()));
     assert!(paths_2.contains(&r"C:\Users\devsa\.pvm\php".to_string()));
 }
@@ -302,7 +297,9 @@ fn test_update_check_throttling() {
         .unwrap()
         .as_secs();
 
-    ctx.db.set_setting("LastUpdateCheck", &now_secs.to_string()).unwrap();
+    ctx.db
+        .set_setting("LastUpdateCheck", &now_secs.to_string())
+        .unwrap();
 
     // Call auto_update_check. Since last check was now, it should NOT check again and should return Ok(())
     // directly without querying GitHub (which would fail/error out or take time in sandbox/offline).
@@ -314,7 +311,9 @@ fn test_update_check_throttling() {
 
     // Now let's set LastUpdateCheck to more than 24 hours ago (e.g. 25 hours ago)
     let old_secs = now_secs - 90000; // 25 hours ago
-    ctx.db.set_setting("LastUpdateCheck", &old_secs.to_string()).unwrap();
+    ctx.db
+        .set_setting("LastUpdateCheck", &old_secs.to_string())
+        .unwrap();
 
     // If we call auto_update_check now, it should try to check, which would fail or try to connect to GitHub.
     // Since we are in an offline test, it will fail network connection, but it should not return Err because
@@ -324,7 +323,13 @@ fn test_update_check_throttling() {
     let res2 = PVM::commands::auto_update_check(&ctx);
     assert!(res2.is_ok());
 
-    let updated_check = ctx.db.get_setting("LastUpdateCheck").unwrap().unwrap().parse::<u64>().unwrap();
+    let updated_check = ctx
+        .db
+        .get_setting("LastUpdateCheck")
+        .unwrap()
+        .unwrap()
+        .parse::<u64>()
+        .unwrap();
     assert!(updated_check >= now_secs);
 
     // Clean up environment variable
@@ -340,5 +345,3 @@ fn test_version_command() {
     assert!(res.is_ok());
     assert_eq!(PVM::commands::PVM_VERSION, env!("CARGO_PKG_VERSION"));
 }
-
-

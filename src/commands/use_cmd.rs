@@ -1,9 +1,11 @@
+use anyhow::Result;
+
 use crate::commands::PvmContext;
 use std::fs;
 use std::path::Path;
 
 /// Switch to use the specified php version.
-pub fn use_command(ctx: &PvmContext, version: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn use_command(ctx: &PvmContext, version: &str) -> Result<()> {
     let php_version = ctx.db.get_php_version(version)?;
     let php_version = match php_version {
         Some(v) => v,
