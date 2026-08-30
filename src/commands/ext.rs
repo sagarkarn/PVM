@@ -1,5 +1,6 @@
 pub mod enable;
 pub mod info;
+pub mod install;
 pub mod list;
 pub mod open;
 pub mod search;
@@ -15,6 +16,7 @@ pub enum ExtCommand {
     Enable { ext: String },
     Search { query: String },
     Info { ext: String },
+    Install { ext: String },
 }
 
 pub fn ext_command(
@@ -52,6 +54,7 @@ pub fn ext_command(
         ExtCommand::Enable { ext } => enable::ext_enable_command(ctx, &ext),
         ExtCommand::Search { query } => search::PackagistClient::new().search_extension(&query),
         ExtCommand::Info { ext } => info::ext_info_command(&ext_path, &ext),
+        ExtCommand::Install { ext } => install::ext_install_command(ctx, &ext),
     }
     .unwrap();
     Ok(())
